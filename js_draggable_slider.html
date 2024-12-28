@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script defer>
+
+        let isPressed = false;
+        let cursorX;    // mouse Xpos relative to slider
+
+        document.addEventListener("DOMContentLoaded", () => {
+
+            //  HTML elmenets: .container>.cards>.card
+            const slider = document.querySelector('.container');    // stationary element, fixed size
+            let cardsX = slider.offsetLeft;  // cards Xpos rel to sceen
+            let sliderEndX = -1 * ((window.innerWidth - slider.innerWidth) / 2 + slider.innerWidth);
+            const cards = document.querySelector('.cards');         // responsive width, sliding element
+
+
+
+            /** 
+             * slide the container - constantly
+             * */
+            let lastTime = 0; // Store the last time the action was executed
+            const delay = 34;
+            let direction = 1;
+            let increment = 2;
+
+            function slideConstantly() {
+
+                // console.log('isPressed: ' + isPressed);
+
+                if (!isPressed) {
+
+                    window.requestAnimationFrame(() => {
+                        // catch a high resolution timestamp
+                        const nowTime = performance.now();
+
+                        // Check if the time difference is greater than or equal to the delay
+                        if (nowTime - lastTime >= delay) {
+                            cardsX -= increment * direction;
+
+                            cards.style.left = `${cardsX}px`;
+
+                            boundSlides();
+
+                            lastTime = nowTime; // Update the last execution time
+                        }
+
+                        slideConstantly(); // slide it again
+                    });
+                }
+            };
+
+            slideConstantly();
+
+
+
+            /**
+             * dragging the slider
+             * */
+
+            // when slider pressed, prepare it for being dragged
+            slider.addEventListener("mousedown", (e) => {
+
+                isPressed = true;
+                cursorX = e.offsetX - cards.offsetLeft;
+                slider.style.cursor = "grabbing";
+            });
+
+            // if mouse-released (set on document, not slider, for cases when mouse is moved outside of slider)
+            document.addEventListener("mouseup", (e) => {
+
+                // stop dragging
+                isPressed = false;
+                slider.style.cursor = "grab";
+
+                // restart sliding constantly        
+                lastTime = 0;
+                slideConstantly();
+            });
+
+            // move the slider with mouse moving
+            slider.addEventListener("mousemove", (e) => {
+
+                // change sliding direction based on mouse being on left/right half of the screen
+                if (window.innerWidth / 2 > e.offsetX) {
+                    direction = -1;
+                } else {
+                    direction = 1;
+                }
+
+                if (!isPressed) return;
+
+                // while pressed, drag the slider
+                dragTheSlider(e);
+            });
+
+            // on mouse out of slider, stop dragging
+            slider.addEventListener("mouseout", (e) => {
+
+                // stop dragging the slider
+                isPressed = false;
+                slideConstantly();
+            });
+
+            // while pressed, drag the slider
+            function dragTheSlider(e) {
+                e.preventDefault();
+
+                cardsX = e.offsetX - cursorX;
+                cards.style.left = `${cardsX}px`;
+
+                // limit dragging to visible part of the screen
+                boundSlides();
+            }
+
+            // limit dragging to visible part of the screen
+            function boundSlides() {
+
+                if (parseInt(cards.style.left) > 0) {
+
+                    cards.style.left = cardsX = 0;
+                    if (!isPressed) {
+                        direction = 1;
+                    }
+                } else {
+
+                    const containerRect = slider.getBoundingClientRect();
+                    const cardsRect = cards.getBoundingClientRect();
+
+                    if (cardsRect.right < containerRect.right) {
+
+                        // console.log(cardsRect.right + ' ' + containerRect.right);
+                        if (isPressed) {
+                            isPressed = false;
+                            cardsX = containerRect.width - cardsRect.width;
+                        }
+                        direction = -1;
+
+                        cards.style.left = `-${cardsX}px`;
+                    }
+                }
+            }
+
+        });
+    </script>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: black;
+        }
+
+        /* global */
+        img {
+            width: 100%;
+        }
+
+        h1 {
+            margin: 0.7rem 0;
+        }
+
+        /* container */
+        .container {
+            width: 1000px;
+            height: 500px;
+            position: relative;
+
+        }
+
+        /*cards */
+        .cards {
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: grid;
+            grid-template-columns: repeat(6, 400px);
+            grid-gap: 20px;
+            pointer-events: none;
+        }
+
+        /* card */
+        .card {
+            border: 1px solid rgb(204, 204, 204);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0px 5px 20px 0px rgba(69, 67, 96, 0.2);
+
+        }
+
+        /* card_content */
+        .card__content {
+            color: rgb(139, 137, 137);
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="cards">
+            <div class="card">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGqsuPapsSkvE1CmgIDKLzz7wae5kXblPhan-of6_uEBgiVuikb7SXAKJuhkEL-7I47Vg&usqp=CAU" alt="" />
+                <div class="card__content">
+                    <h1>Coderpad</h1>
+                    <p>
+                        CoderPad is a simple yet powerful online technical assessment software that makes it easy to interview in the candidate's language of choice so hiring!
+                    </p>
+                </div>
+            </div>
+            <div class="card">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-jt3d-_xLuJFSQPmo6Tqepn4_wtLlgb9RHA&usqp=CAU" alt="" />
+                <div class="card__content">
+                    <h1>Coderpad</h1>
+                    <p>
+                        CoderPad is a simple yet powerful online technical assessment software that makes it easy to interview in the candidate's language of choice so hiring!
+                    </p>
+                </div>
+            </div>
+            <div class="card">
+                <img src=" https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSGqsuPapsSkvE1CmgIDKLzz7wae5kXblPhan-of6_uEBgiVuikb7SXAKJuhkEL-7I47Vg&usqp=CAU" alt="" />
+                <div class="card__content">
+                    <h1>Coderpad</h1>
+                    <p>
+                        CoderPad is a simple yet powerful online technical assessment software that makes it easy to interview in the candidate's language of choice so hiring!
+                    </p>
+                </div>
+            </div>
+            <div class="card">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ8IO5pV7-yK2sN_BWo1UKij8xoRE9g2RoPHgqVD44wG0UAwXJyhPLGr4_-intJUVg-I0w&usqp=CAU
+            " alt="" />
+                <div class="card__content">
+                    <h1>Coderpad</h1>
+                    <p>
+                        CoderPad is a simple yet powerful online technical assessment software that makes it easy to interview in the candidate's language of choice so hiring!
+                    </p>
+                </div>
+            </div>
+            <div class="card"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQX5G4dIuaf2GvJH8qrsqK8fJI8jcJbxo_SLQapss5k0fgcS0weQz8T2iL19MoQhBLzJQw&usqp=CAU" alt="" />
+                <div class="card__content">
+                    <h1>Coderpad</h1>
+                    <p>
+                        CoderPad is a simple yet powerful online technical assessment software that makes it easy to interview in the candidate's language of choice so hiring!
+                    </p>
+                </div>
+            </div>
+            <div class="card">
+                <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQX5G4dIuaf2GvJH8qrsqK8fJI8jcJbxo_SLQapss5k0fgcS0weQz8T2iL19MoQhBLzJQw&usqp=CAU" alt="" />
+                <div class="card__content">
+                    <h1>Coderpad</h1>
+                    <p>
+                        CoderPad is a simple yet powerful online technical assessment software that makes it easy to interview in the candidate's language of choice so hiring!
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
